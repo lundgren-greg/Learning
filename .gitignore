@@ -12,6 +12,8 @@ build/
 out/
 *.o
 *.exe
+rust-lab/target/
+
 
 # IDE / Editor
 .vscode/
