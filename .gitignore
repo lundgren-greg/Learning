@@ -12,7 +12,7 @@ build/
 out/
 *.o
 *.exe
-rust-lab/target/
+
 
 
 # IDE / Editor
@@ -24,3 +24,10 @@ rust-lab/target/
 # OS
 .DS_Store
 Thumbs.db
+
+
+rust-lab/**.bin
+rust-lab/**/**.lock
+*.lock
+
+*.bin

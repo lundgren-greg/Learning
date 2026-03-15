@@ -25,10 +25,6 @@ fn main() {
     score += 10;
     println!("Score: {}", score);
 
-
-
-
-
     // ----------------------------------------------------------
     // TODO 3 — Basic Arithmetic
     //   Declare two integers, multiply them, and print the product.
@@ -38,10 +34,6 @@ fn main() {
     let int_two = 9;
     let product = int_one * int_two;
     println!("{} * {} = {}", int_one, int_two, product);
-
-
-
-
 
     // ----------------------------------------------------------
     // TODO 4 — if / else
@@ -65,7 +57,6 @@ fn main() {
         println!("{}", i);
     }
 
-
     // ----------------------------------------------------------
     // TODO 6 — Functions
     //   Uncomment the `add` function below main, then call it
@@ -85,8 +76,6 @@ fn main() {
     string7.push_str(" Rust!");
     println!("{}", string7);
 
-
-
     // ----------------------------------------------------------
     // TODO 8 — Vectors
     //   Create a Vec<i32> with three numbers, push a fourth,
@@ -95,8 +84,6 @@ fn main() {
     let mut vec8: Vec<i32> = vec![10, 20, 30];
     vec8.push(40);
     pa(vec8);
-
-
 
     // ----------------------------------------------------------
     // TODO 9 — Structs
@@ -132,6 +119,15 @@ fn main() {
     };
     println!("{}", dog.speak());
 
+    let cat = Cat {
+        name: String::from("Whiskers"),
+    };
+    println!("{}", cat.speak());
+
+    let squirrel = Squirrel {
+        name: String::from("Nutty"),
+    };
+
     // ----------------------------------------------------------
     // TODO 12 - Impl Blocks (associated fn + methods)
     //   1) Add a method: fn can_hold(&self, other: &Rectangle) -> bool
@@ -142,15 +138,30 @@ fn main() {
     let r1 = Rectangle::new(8.0, 3.0);
     println!("r1 area: {}", r1.area());
 
+    let sq = Rectangle::square(5.0);
+    println!("square area: {}", sq.area());
+    println!("can square hold r1: {}", sq.can_hold(&r1));
+
+    let small_sq: Rectangle = Rectangle::square(2.0);
+    println!("small square area: {}", small_sq.area());
+    println!("can square hold small square: {}", sq.can_hold(&small_sq));
+
     // TODO 13 - Traits + Generics
     //   Write a generic function below main:
     //   fn announce<T: Speaker>(item: &T) { ... }
     //   Then call announce(&dog) here.
+    announce(&dog);
+    announce(&cat);
+    // announce(&squirrel); // ← this won't work because Squirrel doesn't implement Speaker
 
     // TODO 14 - Default Trait Methods
     //   Add fn category(&self) -> &'static str to Speaker with a default value,
     //   then override it for Dog and (your new) Cat.
     //   Print both categories here.
+}
+
+fn announce<T: Speaker>(item: &T) {
+    println!("Announcement: {}", item.speak());
 }
 
 // ── Helpers for the TODOs above ─────────────────────────────
@@ -174,17 +185,41 @@ enum Direction {
     Right,
 }
 
+// traits are like interfaces
 trait Speaker {
     fn speak(&self) -> String;
+    fn category(&self) -> &'static str;
 }
 
 struct Dog {
     name: String,
 }
 
+struct Cat {
+    name: String,
+}
+
+struct Squirrel {
+    name: String,
+}
+
 impl Speaker for Dog {
     fn speak(&self) -> String {
         format!("{} says woof", self.name)
+    }
+
+    fn category(&self) -> &'static str {
+        "canine"
+    }
+}
+
+impl Speaker for Cat {
+    fn speak(&self) -> String {
+        format!("{} says meow", self.name)
+    }
+
+    fn category(&self) -> &'static str {
+        "feline"
     }
 }
 
@@ -201,6 +236,18 @@ impl Rectangle {
     fn area(&self) -> f64 {
         self.width * self.height
     }
+
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        (self.width >= other.width && self.height >= other.height)
+            || (self.width >= other.height && self.height >= other.width)
+    }
+
+    fn square(size: f64) -> Self {
+        Self {
+            width: size,
+            height: size,
+        }
+    }
 }
 
 fn pv(x: &str) {
@@ -212,4 +259,3 @@ fn pa(a: Vec<i32>) {
         println!("{}", n);
     }
 }
-
