@@ -1,0 +1,72 @@
+:root {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: #213547;
+  background-color: #f9f9f9;
+}
+
+.app {
+  max-width: 640px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+h1 {
+  margin-top: 0;
+}
+
+/* Mode Toggle */
+.mode-toggle {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.mode-toggle legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.mode-toggle label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 1.5rem;
+  cursor: pointer;
+}
+
+/* Content area */
+.content {
+  margin-top: 1rem;
+}
+
+.hello-world {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Admin Panel */
+.admin-panel {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+}
+
+.admin-panel h2 {
+  margin-top: 0;
+  color: #856404;
+}
+
+.admin-panel ul {
+  padding-left: 1.2rem;
+}
+
+.admin-panel li {
+  margin-bottom: 0.4rem;
+}
