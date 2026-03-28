@@ -1,7 +1,7 @@
-import { useState } from "react";
+import {useCallback, useState} from "react";
 import { AdminPanel } from "./components/AdminPanel";
 import { ModeToggle } from "./components/ModeToggle";
-import { fetchPermissions } from "./services/permissionsService";
+import {fetchPermissions, type PermissionsResponse} from "./services/permissionsService";
 import "./App.css";
 
 type Mode = "user" | "admin";
@@ -9,7 +9,7 @@ type Mode = "user" | "admin";
 function App() {
   const [mode, setMode] = useState<Mode>("user");
 
-  // TODO (Exercise 2): When the user switches the radio button, call
+  //  (Exercise 2): When the user switches the radio button, call
   //   fetchPermissions with the selected role and store the API response
   //   in component state.
   //
@@ -17,8 +17,17 @@ function App() {
   //  - Selecting "Admin" calls the API with role "admin".
   //  - Selecting "User" calls the API with role "user".
   //  - The API response is available to the rest of the component.
+const radioButtonSwitched = useCallback((nextMode: Mode) => {
+  let result:Promise<PermissionsResponse>  = fetchPermissions(nextMode);
+console.log(result);
+console.log("Greg")
+    // if successful then update
 
-  // TODO (Exercise 3): Show the AdminPanel only when the API says the
+    setMode(nextMode)
+},[]);
+
+
+  // TO DO (Exercise 3): Show the AdminPanel only when the API says the
   //   user has admin access. Right now it is hardcoded to visible={false}.
   //
   // Acceptance criteria:
@@ -30,12 +39,12 @@ function App() {
     <div className="app">
       <h1>Permissions Demo</h1>
 
-      <ModeToggle mode={mode} onChange={setMode} />
+      <ModeToggle mode={mode} onChange={radioButtonSwitched} />
 
       <div className="content">
         <p className="hello-world">Hello World</p>
 
-        <AdminPanel visible={false} />
+        <AdminPanel visible={mode==="admin"}/>
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ interface ModeToggleProps {
 /**
  * Radio-button toggle that lets you switch between User mode and Admin mode.
  * Selecting a mode should trigger an API call to retrieve the appropriate
- * permissions (see the TODO in App.tsx).
+ * permissions (see the in App.tsx).
  */
 export function ModeToggle({ mode, onChange }: ModeToggleProps) {
   return (

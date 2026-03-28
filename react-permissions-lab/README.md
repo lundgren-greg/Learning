@@ -2,6 +2,25 @@
 
 An exercise in calling a C# backend API from a React / TypeScript frontend.
 
+## Formatting and format-on-save
+
+This repo includes:
+- `.editorconfig` for shared whitespace/indent rules across frontend and backend.
+- `.prettierrc.json` + `.prettierignore` for web-formatting defaults.
+- `.vscode/settings.json` for language-aware format-on-save in VS Code/Cursor.
+
+Frontend formatter commands:
+
+```bash
+cd frontend
+npm run format
+npm run format:check
+```
+
+If you use Rider/JetBrains for C#, keep `Reformat code` enabled on save; `.editorconfig` rules are applied there too.
+
+---
+
 ## What is already built
 
 | Component | Location |

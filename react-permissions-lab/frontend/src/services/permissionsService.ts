@@ -7,7 +7,7 @@ export interface PermissionsResponse {
 }
 
 /**
- * TODO (Exercise 1): Implement this function.
+ * (Exercise 1): Implement this function.
  *
  * Goal: Call the backend permissions API and return the result.
  *
@@ -21,9 +21,15 @@ export interface PermissionsResponse {
 export async function fetchPermissions(
   role: "user" | "admin"
 ): Promise<PermissionsResponse> {
-  // TODO: Replace this stub with a real API call.
-  throw new Error(
-    `fetchPermissions is not yet implemented. ` +
-      `Expected to call ${API_BASE_URL}/api/permissions?role=${role}`
+  const response = await fetch(
+    `${API_BASE_URL}/api/permissions?role=${encodeURIComponent(role)}`
   );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch permissions for role '${role}': ${response.status} ${response.statusText}`
+    );
+  }
+
+  return (await response.json()) as PermissionsResponse;
 }

@@ -4,7 +4,7 @@ interface AdminPanelProps {
 
 /**
  * A secret panel that should only be visible to admin users.
- * The `visible` prop is currently hardcoded in App.tsx — your TODO is to drive
+ * The `visible` prop is currently hardcoded in App.tsx — your TO DO is to drive
  * it from the API response instead.
  */
 export function AdminPanel({ visible }: AdminPanelProps) {
@@ -18,6 +18,7 @@ export function AdminPanel({ visible }: AdminPanelProps) {
         <li>Manage users</li>
         <li>View audit logs</li>
         <li>Configure system settings</li>
+          <li>Greg Mode</li>
       </ul>
     </div>
   );
