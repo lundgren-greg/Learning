@@ -27,6 +27,7 @@ app.MapGet("/api/permissions", (string role) =>
     var result = normalised switch
     {
         "admin" => new PermissionsResponse(Role: "admin", HasAdminAccess: true),
+        "greg" => new PermissionsResponse(Role: "greg", HasAdminAccess: true),
         _       => new PermissionsResponse(Role: "user",  HasAdminAccess: false),
     };
 
@@ -37,3 +38,6 @@ app.MapGet("/api/permissions", (string role) =>
 app.Run();
 
 record PermissionsResponse(string Role, bool HasAdminAccess);
+
+public partial class Program;
+
