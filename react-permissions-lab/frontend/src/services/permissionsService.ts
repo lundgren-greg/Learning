@@ -7,25 +7,21 @@ export interface PermissionsResponse {
 }
 
 /**
- * TODO: Call the backend API to retrieve the permissions for the given role.
+ * TODO (Exercise 1): Implement this function.
  *
- * Steps to implement:
- *  1. Use the `fetch` API (or a library like axios) to make a GET request to:
- *       `${API_BASE_URL}/api/permissions?role=<role>`
- *  2. Parse the JSON response body into a `PermissionsResponse` object.
- *  3. Return the parsed object.
- *  4. Handle network/HTTP errors appropriately (e.g., throw an Error with a
- *     descriptive message so the caller can display feedback to the user).
+ * Goal: Call the backend permissions API and return the result.
  *
- * Example fetch call to get you started:
- *   const response = await fetch(`${API_BASE_URL}/api/permissions?role=${role}`);
- *   if (!response.ok) throw new Error(`API error: ${response.status}`);
- *   return response.json() as Promise<PermissionsResponse>;
+ * API endpoint:  GET ${API_BASE_URL}/api/permissions?role=<role>
+ *
+ * Acceptance criteria:
+ *  - Makes an HTTP GET request to the endpoint above.
+ *  - Returns a PermissionsResponse parsed from the JSON body.
+ *  - Throws a descriptive Error when the request fails.
  */
 export async function fetchPermissions(
   role: "user" | "admin"
 ): Promise<PermissionsResponse> {
-  // TODO: Replace this stub with a real API call (see instructions above).
+  // TODO: Replace this stub with a real API call.
   throw new Error(
     `fetchPermissions is not yet implemented. ` +
       `Expected to call ${API_BASE_URL}/api/permissions?role=${role}`

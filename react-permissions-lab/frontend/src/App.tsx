@@ -9,29 +9,22 @@ type Mode = "user" | "admin";
 function App() {
   const [mode, setMode] = useState<Mode>("user");
 
-  // TODO #1 — Call the API when the mode changes.
+  // TODO (Exercise 2): When the user switches the radio button, call
+  //   fetchPermissions with the selected role and store the API response
+  //   in component state.
   //
-  // Currently the mode is stored in local state but no API call is made.
-  // Your task:
-  //   1. Add a `permissions` state variable to hold the `PermissionsResponse`
-  //      returned by the API (import the type from ./services/permissionsService).
-  //   2. Create a `handleModeChange` function that:
-  //        a. Updates the `mode` state.
-  //        b. Calls `fetchPermissions(newMode)` from permissionsService.ts.
-  //        c. Stores the result in the `permissions` state.
-  //        d. Handles any errors (e.g., show an error message in the UI).
-  //   3. Pass `handleModeChange` to <ModeToggle onChange={...}> instead of the
-  //      plain `setMode` that is currently wired up.
-  //
-  // Hint: because fetchPermissions is async, use async/await inside the handler
-  // or chain .then()/.catch() on the returned Promise.
+  // Acceptance criteria:
+  //  - Selecting "Admin" calls the API with role "admin".
+  //  - Selecting "User" calls the API with role "user".
+  //  - The API response is available to the rest of the component.
 
-  // TODO #2 — Conditionally render the AdminPanel based on API permissions.
+  // TODO (Exercise 3): Show the AdminPanel only when the API says the
+  //   user has admin access. Right now it is hardcoded to visible={false}.
   //
-  // Right now the AdminPanel is never shown (visible={false}).
-  // Once you complete TODO #1 you will have a `permissions` object.
-  // Replace `false` below with `permissions?.hasAdminAccess ?? false` so
-  // that the panel appears only when the API says the user is an admin.
+  // Acceptance criteria:
+  //  - Switching to "Admin" shows the secret admin panel.
+  //  - Switching back to "User" hides it.
+  //  - The visibility is driven by the API response, not the local mode state.
 
   return (
     <div className="app">
@@ -42,7 +35,6 @@ function App() {
       <div className="content">
         <p className="hello-world">Hello World</p>
 
-        {/* TODO #2: Replace `false` with the hasAdminAccess value from the API */}
         <AdminPanel visible={false} />
       </div>
     </div>
@@ -50,7 +42,7 @@ function App() {
 }
 
 // Keep the import used so TypeScript/ESLint don't flag it as unused while the
-// TODOs are still pending.
+// exercises are still pending.
 void fetchPermissions;
 
 export default App;

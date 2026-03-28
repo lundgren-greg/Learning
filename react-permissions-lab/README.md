@@ -4,15 +4,13 @@ An exercise in calling a C# backend API from a React / TypeScript frontend.
 
 ## What is already built
 
-| Thing | Location | Status |
-|---|---|---|
-| C# minimal API with a `/api/permissions` endpoint | `backend/PermissionsApi/` | ✅ Done |
-| Radio-button mode toggle (User / Admin) | `frontend/src/components/ModeToggle.tsx` | ✅ Done |
-| `AdminPanel` component (secret panel) | `frontend/src/components/AdminPanel.tsx` | ✅ Done |
-| "Hello World" display | `frontend/src/App.tsx` | ✅ Done |
-| `fetchPermissions` service function | `frontend/src/services/permissionsService.ts` | ⬜ Stub — **your TODO** |
-| Wire API call to mode change | `frontend/src/App.tsx` (TODO #1) | ⬜ **Your TODO** |
-| Conditionally show Admin Panel | `frontend/src/App.tsx` (TODO #2) | ⬜ **Your TODO** |
+| Component | Location |
+|---|---|
+| C# minimal API — `GET /api/permissions?role=user\|admin` | `backend/PermissionsApi/Program.cs` |
+| Radio-button mode toggle (User / Admin) | `frontend/src/components/ModeToggle.tsx` |
+| Secret admin panel component | `frontend/src/components/AdminPanel.tsx` |
+| Service function stub & response type | `frontend/src/services/permissionsService.ts` |
+| Main app shell with "Hello World" | `frontend/src/App.tsx` |
 
 ---
 
@@ -26,12 +24,12 @@ react-permissions-lab/
 │       └── PermissionsApi.csproj
 └── frontend/                  ← Vite + React + TypeScript
     ├── src/
-    │   ├── App.tsx            ← Main app (TODO #1 and TODO #2 are here)
+    │   ├── App.tsx
     │   ├── components/
     │   │   ├── AdminPanel.tsx
     │   │   └── ModeToggle.tsx
     │   └── services/
-    │       └── permissionsService.ts   ← TODO: implement fetchPermissions
+    │       └── permissionsService.ts
     └── package.json
 ```
 
@@ -55,14 +53,12 @@ dotnet run --launch-profile http
 
 The API will be available at **http://localhost:5081**.
 
-You can test it immediately with curl or a browser:
+Verify it works:
 
 ```bash
-# User permissions
 curl "http://localhost:5081/api/permissions?role=user"
 # → {"role":"user","hasAdminAccess":false}
 
-# Admin permissions
 curl "http://localhost:5081/api/permissions?role=admin"
 # → {"role":"admin","hasAdminAccess":true}
 ```
@@ -81,32 +77,39 @@ The app will open at **http://localhost:5173**.
 
 ---
 
-## Your TODOs
+## Exercises
 
-Find **TODO #1** and **TODO #2** in `frontend/src/App.tsx`. Detailed instructions
-are in comments directly above each TODO marker.
+There are three TODO exercises across two files. Complete them in order.
 
-### TODO #1 — Call the API when the mode changes (`App.tsx`)
+### Exercise 1 — Implement `fetchPermissions` (`permissionsService.ts`)
 
-1. Add a `permissions` state variable.
-2. Create a `handleModeChange` async function that calls `fetchPermissions` from
-   `permissionsService.ts` and stores the result.
-3. Wire `handleModeChange` to the `<ModeToggle>` component.
+The function signature, return type, and API endpoint are provided. Make it call
+the backend and return a typed response.
 
-### TODO #2 — Conditionally render the Admin Panel (`App.tsx`)
+### Exercise 2 — Call the API on mode change (`App.tsx`)
 
-Replace the hardcoded `false` in `<AdminPanel visible={false} />` with the
-`hasAdminAccess` field from the permissions state you built in TODO #1.
+When the user toggles the radio button, call your `fetchPermissions` function and
+store the result in component state.
 
-### Implementing `fetchPermissions` (`permissionsService.ts`)
+### Exercise 3 — Conditionally render the admin panel (`App.tsx`)
 
-Open `frontend/src/services/permissionsService.ts`. The function signature and
-expected return type are already defined. Follow the inline instructions to
-replace the stub with a real `fetch` call to the backend.
+Use the stored API response to control the `visible` prop on `<AdminPanel>`.
+Switching to Admin should show the panel; switching back to User should hide it.
 
 ---
 
-## Quick API reference
+## How to verify your solution
+
+1. Start both the backend and frontend (see above).
+2. Open http://localhost:5173 — you should see "Hello World" and the mode toggle.
+3. Select **Admin** → the admin panel should appear below "Hello World".
+4. Select **User** → the admin panel should disappear.
+5. Open the browser Network tab and confirm a `GET /api/permissions?role=...`
+   request fires each time you change mode.
+
+---
+
+## API reference
 
 | Method | URL | Query param | Response |
 |--------|-----|-------------|----------|
