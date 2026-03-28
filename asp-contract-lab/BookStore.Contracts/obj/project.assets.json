@@ -8,23 +8,26 @@
     "net8.0": []
   },
   "packageFolders": {
-    "C:\\Users\\lundg\\.nuget\\packages\\": {}
+    "/tmp/codeql-scratch-56a659d1465d4174/dbs/csharp/working/packages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Repos\\Learning\\asp-contract-lab\\BookStore.Contracts\\BookStore.Contracts.csproj",
+      "projectUniqueName": "/home/runner/work/Learning/Learning/asp-contract-lab/BookStore.Contracts/BookStore.Contracts.csproj",
       "projectName": "BookStore.Contracts",
-      "projectPath": "C:\\Repos\\Learning\\asp-contract-lab\\BookStore.Contracts\\BookStore.Contracts.csproj",
-      "packagesPath": "C:\\Users\\lundg\\.nuget\\packages\\",
-      "outputPath": "C:\\Repos\\Learning\\asp-contract-lab\\BookStore.Contracts\\obj\\",
+      "projectPath": "/home/runner/work/Learning/Learning/asp-contract-lab/BookStore.Contracts/BookStore.Contracts.csproj",
+      "packagesPath": "/tmp/codeql-scratch-56a659d1465d4174/dbs/csharp/working/packages",
+      "outputPath": "/home/runner/work/Learning/Learning/asp-contract-lab/BookStore.Contracts/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\lundg\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/runner/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
@@ -40,7 +43,8 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      }
+      },
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net8.0": {
@@ -56,12 +60,22 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.25, 8.0.25]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.25, 8.0.25]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.419/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
