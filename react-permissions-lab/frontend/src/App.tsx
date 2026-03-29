@@ -8,6 +8,7 @@ type Mode = "user" | "admin";
 
 function App() {
   const [mode, setMode] = useState<Mode>("user");
+  const [permission, setPermission] = useState<PermissionsResponse>();
 
   //  (Exercise 2): When the user switches the radio button, call
   //   fetchPermissions with the selected role and store the API response
@@ -17,13 +18,21 @@ function App() {
   //  - Selecting "Admin" calls the API with role "admin".
   //  - Selecting "User" calls the API with role "user".
   //  - The API response is available to the rest of the component.
-const radioButtonSwitched = useCallback((nextMode: Mode) => {
-  let result:Promise<PermissionsResponse>  = fetchPermissions(nextMode);
+const radioButtonSwitched = useCallback(async (nextMode: Mode) => {
+  try{
+
+  let result:PermissionsResponse  =  await fetchPermissions(nextMode);
 console.log(result);
 console.log("Greg")
     // if successful then update
-
+  setPermission(result);
     setMode(nextMode)
+  }
+  catch(err) {
+    console.log(`Error fetching permissions: ${err}, defaulting to user`);
+    setPermission({role: "user", hasAdminAccess: false});
+    setMode("user");
+  }
 },[]);
 
 
@@ -44,7 +53,7 @@ console.log("Greg")
       <div className="content">
         <p className="hello-world">Hello World</p>
 
-        <AdminPanel visible={mode==="admin"}/>
+        <AdminPanel visible={permission?.hasAdminAccess ?? false}/>
       </div>
     </div>
   );
