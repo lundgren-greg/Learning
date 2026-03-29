@@ -115,3 +115,50 @@ Switching to Admin should show the panel; switching back to User should hide it.
 |--------|-----|-------------|----------|
 | GET | `/api/permissions` | `role=user` | `{ "role": "user", "hasAdminAccess": false }` |
 | GET | `/api/permissions` | `role=admin` | `{ "role": "admin", "hasAdminAccess": true }` |
+
+---
+
+## Planned features (TODO)
+
+### Step 1 — Add .NET Aspire DB backend
+
+Integrate a hosted database into the project using [.NET Aspire](https://learn.microsoft.com/dotnet/aspire/get-started/aspire-overview) so the API has a persistent data store.
+
+- [ ] Create an Aspire AppHost project at the solution root.
+- [ ] Add a database resource (e.g. PostgreSQL or SQL Server) to the AppHost.
+- [ ] Wire the connection string through to `PermissionsApi` via Aspire service defaults.
+- [ ] Register a `DbContext` (e.g. `PermissionsDbContext`) in `Program.cs`.
+
+### Step 2 — Define the database schema
+
+Create the initial table to record each role selection.
+
+```
+Table: RoleSelections
+┌─────────────┬──────────────────────┬──────────────────────────────────┐
+│ Column      │ Type                 │ Notes                            │
+├─────────────┼──────────────────────┼──────────────────────────────────┤
+│ Id          │ INT IDENTITY PK      │ Auto-increment primary key       │
+│ Role        │ NVARCHAR(50) NOT NULL│ The role that was requested      │
+│ SelectedAt  │ DATETIMEOFFSET       │ UTC timestamp of the selection   │
+│ UserId      │ NVARCHAR(100) NULL   │ NULL until multi-user is added   │
+└─────────────┴──────────────────────┴──────────────────────────────────┘
+```
+
+- [ ] Add EF Core models and the initial migration (`dotnet ef migrations add InitialCreate`).
+- [ ] Apply the migration on startup (or via a deploy step).
+
+### Step 3 — Track the last selection
+
+- [ ] Persist each role selection to `RoleSelections` inside the `GET /api/permissions` handler.
+- [ ] Add a `GET /api/permissions/last` endpoint that returns the most recently persisted row so the frontend can restore the last selection on page load.
+
+### TODO (future) — Multiple users
+
+> **Note:** This step will require a **database migration** to add a `Users` table and a
+> foreign key from `RoleSelections.UserId` to `Users.Id`.
+
+- [ ] Add a `Users` table to the schema.
+- [ ] Capture the authenticated user's identifier (from `HttpContext.User`) when persisting a selection.
+- [ ] Write an EF Core migration: `dotnet ef migrations add AddUsersTable`.
+- [ ] Update `GET /api/permissions/last` to be user-scoped.
