@@ -33,8 +33,19 @@ public sealed class DeviceTcpCommandClient : IDeviceTcpCommandClient
             await client.ConnectAsync(_options.Host, _options.Port, timeoutCts.Token);
 
             await using var stream = client.GetStream();
-            var payload = Encoding.UTF8.GetBytes($"{mappedDeviceCommand}\n");
-            await stream.WriteAsync(payload, timeoutCts.Token);
+            if (_options.UseLogin)
+            {
+                if (string.IsNullOrWhiteSpace(_options.UserId) || string.IsNullOrWhiteSpace(_options.Password))
+                {
+                    return new DeviceCommandSendResult(false, receivedCommand, mappedDeviceCommand, "Login is enabled but credentials are missing.");
+                }
+
+                await SendLineAsync(stream, _options.LoginCommand, timeoutCts.Token);
+                await SendLineAsync(stream, _options.UserId, timeoutCts.Token);
+                await SendLineAsync(stream, _options.Password, timeoutCts.Token);
+            }
+
+            await SendLineAsync(stream, mappedDeviceCommand, timeoutCts.Token);
             await stream.FlushAsync(timeoutCts.Token);
 
             return new DeviceCommandSendResult(true, receivedCommand, mappedDeviceCommand);
@@ -47,6 +58,13 @@ public sealed class DeviceTcpCommandClient : IDeviceTcpCommandClient
         {
             return new DeviceCommandSendResult(false, receivedCommand, mappedDeviceCommand, ex.Message);
         }
+    }
+
+    private static ValueTask SendLineAsync(NetworkStream stream, string command, CancellationToken cancellationToken)
+    {
+        // netBooter CLI commands are line-oriented and typically expect CRLF.
+        var payload = Encoding.UTF8.GetBytes($"{command}\r\n");
+        return stream.WriteAsync(payload, cancellationToken);
     }
 }
 
