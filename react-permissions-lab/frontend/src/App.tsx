@@ -36,7 +36,7 @@ console.log("Greg")
 },[]);
 
 
-  // TO DO (Exercise 3): Show the AdminPanel only when the API says the
+  // Complete (Exercise 3): Show the AdminPanel only when the API says the
   //   user has admin access. Right now it is hardcoded to visible={false}.
   //
   // Acceptance criteria:

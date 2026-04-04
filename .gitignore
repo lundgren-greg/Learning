@@ -32,3 +32,5 @@ rust-lab/**/**.lock
 *.lock
 
 *.bin
+
+react-permissions-lab/frontend/package-lock.json
