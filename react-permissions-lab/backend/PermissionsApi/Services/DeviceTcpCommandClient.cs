@@ -13,6 +13,12 @@ public sealed record DeviceCommandSendResult(bool Success, string ReceivedComman
 
 public sealed class DeviceTcpCommandClient : IDeviceTcpCommandClient
 {
+    private const byte Iac = 255;
+    private const byte Dont = 254;
+    private const byte Do = 253;
+    private const byte Wont = 252;
+    private const byte Will = 251;
+
     private readonly DeviceTcpOptions _options;
     private readonly ILogger<DeviceTcpCommandClient> _logger;
 
@@ -45,32 +51,74 @@ public sealed class DeviceTcpCommandClient : IDeviceTcpCommandClient
                     return new DeviceCommandSendResult(false, receivedCommand, mappedDeviceCommand, "Login is enabled but credentials are missing.");
                 }
 
+                var sentLoginCommand = false;
                 if (_options.SendLoginCommandFirst && !string.IsNullOrWhiteSpace(_options.LoginCommand))
                 {
                     Debug("Sending login command.");
                     await SendLineAsync(stream, _options.LoginCommand, timeoutCts.Token);
+                    sentLoginCommand = true;
                 }
                 else
                 {
-                    Debug("Skipping login command; waiting for ID prompt first.");
+                    Debug("Skipping upfront login command; inspecting session header first.");
                 }
 
-                Debug("Waiting for ID prompt: {prompt}", _options.IdPrompt);
-                await ReadUntilPromptAsync(stream, _options.IdPrompt, timeoutCts.Token);
+                var sessionHeader = await ReadSessionWindowAsync(stream, timeoutCts.Token, Math.Min(1000, _options.TimeoutMs));
+                var sawIdPrompt = ContainsPrompt(sessionHeader.Text, _options.IdPrompt);
+                if (!sawIdPrompt && !sentLoginCommand && !string.IsNullOrWhiteSpace(_options.LoginCommand))
+                {
+                    Debug("ID prompt not detected in initial header; sending fallback login command.");
+                    await SendLineAsync(stream, _options.LoginCommand, timeoutCts.Token);
+                    sentLoginCommand = true;
+                    var afterLogin = await ReadSessionWindowAsync(stream, timeoutCts.Token, 300);
+                    sessionHeader = sessionHeader with { Text = sessionHeader.Text + afterLogin.Text };
+                    sawIdPrompt = ContainsPrompt(sessionHeader.Text, _options.IdPrompt);
+                }
+
+                if (string.IsNullOrWhiteSpace(sessionHeader.Text))
+                {
+                    throw new OperationCanceledException("Device did not return any session header or prompt after login bootstrap.");
+                }
+
+                if (sawIdPrompt)
+                {
+                    Debug("Detected ID prompt: {prompt}", _options.IdPrompt);
+                }
+                else
+                {
+                    Debug("ID prompt not found; treating banner/header as login-ready state.");
+                }
 
                 Debug("Sending user id.");
-                await SendLineAsync(stream, _options.UserId, timeoutCts.Token);
+                await SendLineAsync(stream, _options.UserId, timeoutCts.Token, redactForLog: true);
 
-                Debug("Waiting for password prompt: {prompt}", _options.PasswordPrompt);
-                await ReadUntilPromptAsync(stream, _options.PasswordPrompt, timeoutCts.Token);
+                var afterUserReadMs = sawIdPrompt ? 500 : 150;
+                var afterUser = await ReadSessionWindowAsync(stream, timeoutCts.Token, afterUserReadMs);
+                var sawPasswordPrompt = ContainsPrompt(afterUser.Text, _options.PasswordPrompt);
+                if (sawPasswordPrompt)
+                {
+                    Debug("Detected password prompt: {prompt}", _options.PasswordPrompt);
+                }
+                else
+                {
+                    Debug("Password prompt not found after user id; sending password anyway.");
+                }
 
                 Debug("Sending password (masked).");
-                await SendLineAsync(stream, _options.Password, timeoutCts.Token);
+                await SendLineAsync(stream, _options.Password, timeoutCts.Token, redactForLog: true);
 
                 if (!string.IsNullOrWhiteSpace(_options.ReadyPrompt))
                 {
-                    Debug("Waiting for ready prompt: {prompt}", _options.ReadyPrompt);
-                    await ReadUntilPromptAsync(stream, _options.ReadyPrompt, timeoutCts.Token);
+                    var afterPasswordReadMs = sawIdPrompt ? 500 : 150;
+                    var afterPassword = await ReadSessionWindowAsync(stream, timeoutCts.Token, afterPasswordReadMs);
+                    if (ContainsPrompt(afterPassword.Text, _options.ReadyPrompt))
+                    {
+                        Debug("Detected ready prompt: {prompt}", _options.ReadyPrompt);
+                    }
+                    else
+                    {
+                        Debug("Ready prompt not detected after password; proceeding with command send.");
+                    }
                 }
             }
 
@@ -93,42 +141,153 @@ public sealed class DeviceTcpCommandClient : IDeviceTcpCommandClient
         }
     }
 
-    private static ValueTask SendLineAsync(NetworkStream stream, string command, CancellationToken cancellationToken)
+    private async ValueTask SendLineAsync(NetworkStream stream, string command, CancellationToken cancellationToken, bool redactForLog = false)
     {
         // netBooter CLI commands are line-oriented and typically expect CRLF.
         var payload = Encoding.UTF8.GetBytes($"{command}\r\n");
-        return stream.WriteAsync(payload, cancellationToken);
+        var commandForLog = redactForLog ? "<redacted>" : command;
+        Debug("TX ({bytes} bytes): {command}", payload.Length, commandForLog);
+        await stream.WriteAsync(payload, cancellationToken);
     }
 
-    private async Task ReadUntilPromptAsync(NetworkStream stream, string prompt, CancellationToken cancellationToken)
+    private async Task<SessionWindowRead> ReadSessionWindowAsync(NetworkStream stream, CancellationToken cancellationToken, int windowTimeoutMs)
+    {
+        var text = new StringBuilder();
+        var receivedAny = false;
+        var buffer = new byte[Math.Max(16, _options.PromptReadBufferBytes)];
+
+        using var readWindowCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        readWindowCts.CancelAfter(Math.Max(50, windowTimeoutMs));
+
+        while (text.Length < Math.Max(256, _options.PromptReadMaxChars))
+        {
+            TelnetChunkRead read;
+            try
+            {
+                read = await ReadChunkAsync(stream, buffer, readWindowCts.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            if (read.BytesRead == 0)
+            {
+                if (receivedAny)
+                {
+                    break;
+                }
+
+                throw new IOException("Connection closed while waiting for device session data.");
+            }
+
+            receivedAny = true;
+            if (read.ReplyBytes.Length > 0)
+            {
+                await stream.WriteAsync(read.ReplyBytes, cancellationToken);
+                Debug("TX telnet negotiation bytes: {bytesHex}", BytesToHex(read.ReplyBytes));
+            }
+
+            if (!string.IsNullOrEmpty(read.TextChunk))
+            {
+                text.Append(read.TextChunk);
+            }
+
+            Debug(
+                "RX ({byteCount} bytes) raw={rawHex} text='{text}'",
+                read.BytesRead,
+                read.RawHex,
+                SanitizeForLog(read.TextChunk));
+
+            if (!stream.DataAvailable)
+            {
+                if (!string.IsNullOrWhiteSpace(read.TextChunk))
+                {
+                    break;
+                }
+
+                continue;
+            }
+        }
+
+        var textValue = text.ToString();
+        Debug("Session window complete. text='{text}'", SanitizeForLog(textValue));
+        return new SessionWindowRead(textValue);
+    }
+
+    private static bool ContainsPrompt(string content, string prompt)
     {
         if (string.IsNullOrWhiteSpace(prompt))
         {
-            return;
+            return false;
         }
 
-        var buffer = new byte[Math.Max(16, _options.PromptReadBufferBytes)];
-        var received = new StringBuilder();
+        return content.Contains(prompt, StringComparison.OrdinalIgnoreCase);
+    }
 
-        while (received.Length < Math.Max(256, _options.PromptReadMaxChars))
+    private async Task<TelnetChunkRead> ReadChunkAsync(NetworkStream stream, byte[] buffer, CancellationToken cancellationToken)
+    {
+        var read = await stream.ReadAsync(buffer, cancellationToken);
+        if (read == 0)
         {
-            var read = await stream.ReadAsync(buffer, cancellationToken);
-            if (read == 0)
-            {
-                throw new IOException($"Connection closed while waiting for prompt '{prompt}'.");
-            }
-
-            var chunk = Encoding.ASCII.GetString(buffer, 0, read);
-            received.Append(chunk);
-
-            if (received.ToString().Contains(prompt, StringComparison.OrdinalIgnoreCase))
-            {
-                Debug("Received prompt {prompt}. Buffer: {buffer}", prompt, SanitizeForLog(received.ToString()));
-                return;
-            }
+            return new TelnetChunkRead(0, string.Empty, string.Empty, Array.Empty<byte>());
         }
 
-        throw new IOException($"Prompt '{prompt}' was not received before read limit.");
+        var textBytes = new List<byte>(read);
+        var negotiationReply = new List<byte>();
+        var i = 0;
+        while (i < read)
+        {
+            if (buffer[i] == Iac)
+            {
+                if (i + 1 >= read)
+                {
+                    break;
+                }
+
+                var command = buffer[i + 1];
+                if (command == Iac)
+                {
+                    textBytes.Add(Iac);
+                    i += 2;
+                    continue;
+                }
+
+                if (i + 2 < read)
+                {
+                    var option = buffer[i + 2];
+                    if (command == Will)
+                    {
+                        negotiationReply.Add(Iac);
+                        negotiationReply.Add(Dont);
+                        negotiationReply.Add(option);
+                    }
+                    else if (command == Do)
+                    {
+                        negotiationReply.Add(Iac);
+                        negotiationReply.Add(Wont);
+                        negotiationReply.Add(option);
+                    }
+
+                    i += 3;
+                    continue;
+                }
+
+                break;
+            }
+
+            textBytes.Add(buffer[i]);
+            i++;
+        }
+
+        var text = Encoding.ASCII.GetString(textBytes.ToArray());
+        var rawHex = BytesToHex(buffer.AsSpan(0, read));
+        return new TelnetChunkRead(read, text, rawHex, negotiationReply.ToArray());
+    }
+
+    private static string BytesToHex(ReadOnlySpan<byte> bytes)
+    {
+        return Convert.ToHexString(bytes);
     }
 
     private void Debug(string messageTemplate, params object?[] args)
@@ -150,5 +309,9 @@ public sealed class DeviceTcpCommandClient : IDeviceTcpCommandClient
             .Replace("\r", "\\r", StringComparison.Ordinal)
             .Replace("\n", "\\n", StringComparison.Ordinal);
     }
+
+    private readonly record struct TelnetChunkRead(int BytesRead, string TextChunk, string RawHex, byte[] ReplyBytes);
+
+    private readonly record struct SessionWindowRead(string Text);
 }
 
