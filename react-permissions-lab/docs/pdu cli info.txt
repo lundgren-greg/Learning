@@ -1,0 +1,75 @@
+netBooter B & DU PDUs
+Command Line Interface
+The help command will return all possible commands that can be run in netBooter B and netBooter DU series PDUs.
+
+The following tables summarize various CLI commands available via Telnet or direct serial port connection.
+
+Network Configuration Commands
+CLI Command	Description
+nwshow	Displays network settings and status, including IP address, gateway, MAC address, and more.
+nwset	Resets the network interface.
+dhcp x	Sets IP to DHCP mode 1 or Static mode 0.
+ip ip mask	Sets the static IP address of the device to ip and the mask to mask. Only applicable if DHCP mode is disabled.
+gw gw	Sets gateway IP to gw for static IP mode. Only applicable if DHCP mode is disabled.
+mac	Displays the Ethernet port MAC address.
+web x	Enables or disables web access. Setting to "1" = Web access On, "0" = Web access Off.
+mask x	Sets the subnet mask of the device to x.
+emailsend	Sends a test mail to the configured email(s).
+hp x	Sets the HTTP port to x.
+tp port	Sets the Telnet port to x.
+help	Displays the help menu.
+ipsrc ip	Sets filtered source IP to ip, allowing only that IP to access the unit.
+login	Logs into the unit.
+logout	Logs out of the unit.
+sysshow	Shows system information.
+ver	Shows firmware version.
+Power Outlet Operations
+CLI Command	Description
+pset arg1 arg2	Sets outlet arg1 state to value arg2, where state 0 = OFF, 1 = ON.
+Example: pset 2 1 sets outlet 2 to ON.
+ps x	Sets all outlets to state x, where 0 = OFF and 1 = ON.
+pshow	Displays outlet status.
+rb x	Reboots outlet x.
+gpset arg1 arg2	Sets outlet group arg1 to state arg21 (0 = OFF, 1 = ON).
+Example: gpset 1 0 turns off all outlets in group 1.
+grb n	Reboots outlet group n.
+
+# params:
+#    port => COM port
+
+s = serial.Serial()
+s.port = port
+
+# Timeout settings
+s.timeout= 1
+s.writeTimeout= 2
+
+try:
+  s.open()
+	s.flushInput()
+	s.flushOutput()
+	# Login to admin
+	s.write("login\n\radmin\n\radmin\n\r".encode("utf-8"))
+	time.sleep(0.5) # Sleep half a second before reading response
+  s.read(512)     # Ready 512 bytes of response
+
+	# Issue command `pset 1 0` to turn outlet 1 off
+  s.write("pset 1 0\n\r".format(command=command).encode("utf-8"))
+
+	# Sleep half a second before reading any responses, if any
+	time.sleep(0.5)
+	response = s.read(512).decode("utf-8")
+	s.close()
+except Exception as err:
+  # Error handling goes here
+
+
+# NP-0801DTG2 reference notes (captured 2026-04-04):
+# - Synaccess main site: https://synaccess.com
+# - Product/resources page discovered from homepage link parsing:
+#   https://synaccess.com/resources/smarter-power-management-remote-automation-with-synlink-sp-and-netbooter-dx-pdus
+# - Local login/command flow used by this repo is based on CLI prompts observed in testing scripts:
+#   wait for ID> ; send userid ; wait for PW> ; send password ; wait for > ; send pset command
+
+
+
