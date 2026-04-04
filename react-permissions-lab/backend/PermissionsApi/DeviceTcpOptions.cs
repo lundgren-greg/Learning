@@ -11,6 +11,13 @@ public sealed class DeviceTcpOptions
     public string PowerOffCommand { get; init; } = "pset 1 0";
     public bool UseLogin { get; init; } = false;
     public string LoginCommand { get; init; } = "login";
+    public bool SendLoginCommandFirst { get; init; } = false;
+    public string IdPrompt { get; init; } = "ID>";
+    public string PasswordPrompt { get; init; } = "PW>";
+    public string ReadyPrompt { get; init; } = ">";
+    public int PromptReadBufferBytes { get; init; } = 256;
+    public int PromptReadMaxChars { get; init; } = 4096;
+    public bool DebugConsoleOutput { get; init; } = false;
     public string UserId { get; init; } = "";
     public string Password { get; init; } = "";
 }
